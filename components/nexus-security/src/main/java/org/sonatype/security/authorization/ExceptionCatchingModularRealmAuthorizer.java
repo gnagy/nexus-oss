@@ -211,7 +211,7 @@ public class ExceptionCatchingModularRealmAuthorizer
                     if ( logger.isTraceEnabled() )
                     {
                         this.logger.trace( "Realm: " + realm.getName() + " user: " + subjectPrincipal.iterator().next()
-                            + " has permisison: " + permission );
+                            + " has permission: " + permission );
                     }
                     return true;
                 }
@@ -220,7 +220,7 @@ public class ExceptionCatchingModularRealmAuthorizer
                     if ( logger.isTraceEnabled() )
                     {
                         this.logger.trace( "Realm: " + realm.getName() + " user: " + subjectPrincipal.iterator().next()
-                            + " does NOT have permisison: " + permission );
+                            + " does NOT have permission: " + permission );
                     }
                 }
 
