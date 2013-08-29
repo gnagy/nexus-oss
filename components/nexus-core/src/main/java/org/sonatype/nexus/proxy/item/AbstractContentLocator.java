@@ -11,20 +11,34 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 
-package org.sonatype.nexus.security;
+package org.sonatype.nexus.proxy.item;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Place for security constants. Some of these are used by current classes but were actually defined in some
- * deprecated,
- * and hence, removed classes.
- *
- * @author cstamas
- * @since 2.6
+ * The support for implementing {@link ContentLocator}s.
+ * 
+ * @since 2.7.0
  */
-public interface Constants
+public abstract class AbstractContentLocator
+    implements ContentLocator
 {
-  /**
-   * @see {@link org.sonatype.nexus.web.Constants#ATTR_KEY_REQUEST_IS_AUTHZ_REJECTED_KEY}
-   */
-  String REQUEST_IS_AUTHZ_REJECTED = org.sonatype.nexus.web.Constants.ATTR_KEY_REQUEST_IS_AUTHZ_REJECTED;
+  private final String mimeType;
+
+  private final boolean reusable;
+
+  public AbstractContentLocator(final String mimeType, final boolean reusable) {
+    this.mimeType = checkNotNull(mimeType);
+    this.reusable = reusable;
+  }
+
+  @Override
+  public String getMimeType() {
+    return mimeType;
+  }
+
+  @Override
+  public boolean isReusable() {
+    return reusable;
+  }
 }

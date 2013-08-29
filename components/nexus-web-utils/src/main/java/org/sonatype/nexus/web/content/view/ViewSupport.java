@@ -11,20 +11,29 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 
-package org.sonatype.nexus.security;
+package org.sonatype.nexus.web.content.view;
+
+import org.sonatype.nexus.logging.AbstractLoggingComponent;
+import org.sonatype.nexus.web.content.Renderer;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Place for security constants. Some of these are used by current classes but were actually defined in some
- * deprecated,
- * and hence, removed classes.
- *
- * @author cstamas
- * @since 2.6
+ * Support class for implementing {@link View} that needs {@link Renderer} or logging handy.
+ * 
+ * @since 2.7.0
  */
-public interface Constants
+public abstract class ViewSupport
+    extends AbstractLoggingComponent
+    implements View
 {
-  /**
-   * @see {@link org.sonatype.nexus.web.Constants#ATTR_KEY_REQUEST_IS_AUTHZ_REJECTED_KEY}
-   */
-  String REQUEST_IS_AUTHZ_REJECTED = org.sonatype.nexus.web.Constants.ATTR_KEY_REQUEST_IS_AUTHZ_REJECTED;
+  private final Renderer renderer;
+
+  public ViewSupport(final Renderer renderer) {
+    this.renderer = checkNotNull(renderer);
+  }
+
+  protected Renderer getRenderer() {
+    return renderer;
+  }
 }

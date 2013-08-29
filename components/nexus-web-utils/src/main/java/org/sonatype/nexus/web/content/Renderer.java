@@ -11,37 +11,28 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 
-package org.sonatype.nexus.proxy.item;
+package org.sonatype.nexus.web.content;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.Collection;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.sonatype.nexus.proxy.ResourceStoreRequest;
+import org.sonatype.nexus.proxy.item.StorageCollectionItem;
+import org.sonatype.nexus.proxy.item.StorageItem;
 
 /**
- * The Interface ContentLocator. Implements a strategy to fetch content of an item. For implementors, it's recommended
- * to use {@link AbstractContentLocator}.
+ * Rendering component, to render error and index pages.
  * 
- * @author cstamas
- * @see AbstractContentLocator
+ * @since 2.7.0
  */
-public interface ContentLocator
+public interface Renderer
 {
-  /**
-   * Gets the content. It has to be closed by the caller explicitly.
-   * 
-   * @return the content
-   * @throws IOException Signals that an I/O exception has occurred.
-   */
-  InputStream getContent() throws IOException;
+  void renderCollection(final HttpServletRequest request, final HttpServletResponse response,
+      final StorageCollectionItem coll, final Collection<StorageItem> children) throws IOException;
 
-  /**
-   * Returns the MIME type of the content.
-   */
-  String getMimeType();
-
-  /**
-   * Checks if is reusable.
-   * 
-   * @return true, if is reusable
-   */
-  boolean isReusable();
+  void renderErrorPage(final HttpServletRequest request, final HttpServletResponse response,
+      final ResourceStoreRequest resourceStoreRequest, final Exception exception) throws IOException;
 }

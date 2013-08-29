@@ -20,7 +20,7 @@ import java.io.InputStream;
 /**
  * An abstract wrapper for ContentLocator. It implements all methods, but is declared abstract. Subclass it to add some
  * spice.
- *
+ * 
  * @author cstamas
  */
 public abstract class AbstractWrappingContentLocator
@@ -37,9 +37,7 @@ public abstract class AbstractWrappingContentLocator
   }
 
   @Override
-  public InputStream getContent()
-      throws IOException
-  {
+  public InputStream getContent() throws IOException {
     return getTarget().getContent();
   }
 
@@ -57,14 +55,12 @@ public abstract class AbstractWrappingContentLocator
    * Cleans up, closes the wrapped content locator, if it is instance of {@link Closeable}. To be used in cases when
    * you actually don't need the stream (as some error cropped up), and you never requested the stream instance using
    * {@link #getContent()}.
-   *
+   * 
    * @throws IOException if an I/O error occurs.
    * @since 2.5
    */
   @Override
-  public void close()
-      throws IOException
-  {
+  public void close() throws IOException {
     if (contentLocator instanceof Closeable) {
       ((Closeable) contentLocator).close();
     }

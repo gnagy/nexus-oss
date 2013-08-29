@@ -10,21 +10,29 @@
  * of Sonatype, Inc. Apache Maven is a trademark of the Apache Software Foundation. M2eclipse is a trademark of the
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
+package org.sonatype.nexus.web;
 
-package org.sonatype.nexus.security;
+import javax.servlet.http.HttpServletRequest;
+
+import org.sonatype.nexus.proxy.AccessDeniedException;
+import org.sonatype.nexus.proxy.router.RepositoryRouter;
+
+import org.apache.shiro.subject.Subject;
 
 /**
- * Place for security constants. Some of these are used by current classes but were actually defined in some
- * deprecated,
- * and hence, removed classes.
- *
- * @author cstamas
- * @since 2.6
+ * Common HTTP attribute and parameter keys, used to communicate between filters and servlets and similar.
+ * 
+ * @since 2.7.0
  */
 public interface Constants
 {
   /**
-   * @see {@link org.sonatype.nexus.web.Constants#ATTR_KEY_REQUEST_IS_AUTHZ_REJECTED_KEY}
+   * Key of {@link HttpServletRequest} attribute to mark that a request was rejected by some component (like
+   * {@link RepositoryRouter} throwing {@link AccessDeniedException} for example) due to lack of authorization of
+   * current Shiro {@link Subject}. To mark this state, request attribute should contain {@link Boolean#TRUE} mapped
+   * with this key.
+   * 
+   * @since 2.7.0
    */
-  String REQUEST_IS_AUTHZ_REJECTED = org.sonatype.nexus.web.Constants.ATTR_KEY_REQUEST_IS_AUTHZ_REJECTED;
+  String ATTR_KEY_REQUEST_IS_AUTHZ_REJECTED = "request.is.authz.rejected";
 }
