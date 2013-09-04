@@ -25,8 +25,6 @@ import org.restlet.data.Request;
  */
 public class RemoteIPFinder
 {
-  static final String FORWARD_HEADER = "X-Forwarded-For";
-
   /**
    * @deprecated Use {@link org.sonatype.nexus.web.RemoteIPFinder#findIP(HttpServletRequest)} instead.
    */
@@ -38,7 +36,7 @@ public class RemoteIPFinder
   public static String findIP(Request request) {
     Form form = (Form) request.getAttributes().get("org.restlet.http.headers");
 
-    String forwardedIP = org.sonatype.nexus.web.RemoteIPFinder.getFirstForwardedIp(form.getFirstValue(FORWARD_HEADER));
+    String forwardedIP = org.sonatype.nexus.web.RemoteIPFinder.getFirstForwardedIp(form.getFirstValue(org.sonatype.nexus.web.RemoteIPFinder.FORWARD_HEADER));
 
     if (forwardedIP != null) {
       return forwardedIP;

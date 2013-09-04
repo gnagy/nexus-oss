@@ -20,7 +20,6 @@ import java.io.InputStream;
  * The Interface ContentLocator. Implements a strategy to fetch content of an item. For implementors, it's recommended
  * to use {@link AbstractContentLocator}.
  * 
- * @author cstamas
  * @see AbstractContentLocator
  */
 public interface ContentLocator

@@ -57,7 +57,6 @@ import org.sonatype.nexus.web.RemoteIPFinder;
 import org.sonatype.nexus.web.content.view.RequestDescribeView;
 import org.sonatype.nexus.web.content.view.View;
 
-import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -98,13 +97,6 @@ public class NexusContentServlet
   private static final boolean DEREFERENCE_LINKS = SystemPropertiesHelper.getBoolean(
       NexusContentServlet.class.getName() + ".DEREFERENCE_LINKS", true);
 
-  private static final String IS_DESCRIBE_PARAMETER = "describe";
-  private static final String IS_LOCAL_PARAMETER = "isLocal";
-  private static final String IS_REMOTE_PARAMETER = "isRemote";
-  private static final String AS_EXPIRED_PARAMETER = "asExpired";
-
-  public static final String REQUEST_STOPWATCH_ATTRIBUTE = NexusContentServlet.class.getName() + ".request.stopwatch";
-
   private final Logger logger = LoggerFactory.getLogger(NexusContentServlet.class);
 
   private final RepositoryRouter repositoryRouter;
@@ -123,7 +115,7 @@ public class NexusContentServlet
     this.globalRestApiSettings = checkNotNull(globalRestApiSettings);
     this.serverString = "Nexus/" + checkNotNull(applicationStatusSource).getSystemStatus().getVersion();
     this.views = checkNotNull(views);
-    logger.debug("bufferSize={}, dereferenceLinks={}, views=", BUFFER_SIZE, DEREFERENCE_LINKS, views.keySet());
+    logger.debug("bufferSize={}, dereferenceLinks={}, views={}", BUFFER_SIZE, DEREFERENCE_LINKS, views.keySet());
   }
 
   /**
@@ -139,12 +131,9 @@ public class NexusContentServlet
     // honor the local only and remote only
     final Map<String, String[]> parameterMap = request.getParameterMap();
     result.setRequestLocalOnly(isLocal(request, resourceStorePath));
-    result.setRequestRemoteOnly(parameterMap.containsKey(IS_REMOTE_PARAMETER));
-    result.setRequestAsExpired(parameterMap.containsKey(AS_EXPIRED_PARAMETER));
+    result.setRequestRemoteOnly(parameterMap.containsKey(Constants.REQ_QP_IS_REMOTE_PARAMETER));
+    result.setRequestAsExpired(parameterMap.containsKey(Constants.REQ_QP_AS_EXPIRED_PARAMETER));
     result.setExternal(true);
-
-    // honor the describe, add timing
-    request.setAttribute(REQUEST_STOPWATCH_ATTRIBUTE, new Stopwatch().start());
 
     // honor if-modified-since
     final long ifModifiedSince = request.getDateHeader("if-modified-since");
@@ -225,7 +214,7 @@ public class NexusContentServlet
    */
   protected boolean isLocal(final HttpServletRequest request, final String resourceStorePath) {
     // check do we need local only access
-    boolean isLocal = request.getParameterMap().containsKey(IS_LOCAL_PARAMETER);
+    boolean isLocal = request.getParameterMap().containsKey(Constants.REQ_QP_IS_LOCAL_PARAMETER);
     if (!Strings.isNullOrEmpty(resourceStorePath)) {
       // overriding isLocal is we know it will be a collection
       isLocal = isLocal || resourceStorePath.endsWith(RepositoryItemUid.PATH_SEPARATOR);
@@ -234,7 +223,7 @@ public class NexusContentServlet
   }
 
   protected boolean isDescribeRequest(final HttpServletRequest request) {
-    return request.getParameterMap().containsKey(IS_DESCRIBE_PARAMETER);
+    return request.getParameterMap().containsKey(Constants.REQ_QP_IS_DESCRIBE_PARAMETER);
   }
 
   protected void handleException(final HttpServletRequest request, final HttpServletResponse response,
@@ -528,7 +517,7 @@ public class NexusContentServlet
   protected void doGetDescribe(final HttpServletRequest request, final HttpServletResponse response,
       final ResourceStoreRequest rsr, final StorageItem item, final Exception e) throws IOException
   {
-    String requestedView = request.getParameter(IS_DESCRIBE_PARAMETER);
+    String requestedView = request.getParameter(Constants.REQ_QP_IS_DESCRIBE_PARAMETER);
     if (Strings.isNullOrEmpty(requestedView)) {
       // default is request describe
       requestedView = RequestDescribeView.ID;

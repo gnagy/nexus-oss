@@ -15,6 +15,7 @@ package org.sonatype.nexus.web;
 import javax.servlet.http.HttpServletRequest;
 
 import org.sonatype.nexus.proxy.AccessDeniedException;
+import org.sonatype.nexus.proxy.RequestContext;
 import org.sonatype.nexus.proxy.router.RepositoryRouter;
 
 import org.apache.shiro.subject.Subject;
@@ -35,4 +36,24 @@ public interface Constants
    * @since 2.7.0
    */
   String ATTR_KEY_REQUEST_IS_AUTHZ_REJECTED = "request.is.authz.rejected";
+
+  /**
+   * HTTP query parameter to mark request as "describe" request.
+   */
+  String REQ_QP_IS_DESCRIBE_PARAMETER = "describe";
+
+  /**
+   * HTTP query parameter to mark request as "local" request, see {@link RequestContext#isRequestLocalOnly()}.
+   */
+  String REQ_QP_IS_LOCAL_PARAMETER = "isLocal";
+
+  /**
+   * HTTP query parameter to mark request as "remote" request, see {@link RequestContext#isRequestRemoteOnly()}.
+   */
+  String REQ_QP_IS_REMOTE_PARAMETER = "isRemote";
+
+  /**
+   * HTTP query parameter to mark request as "expired" request, see {@link RequestContext#isRequestAsExpired()}.
+   */
+  String REQ_QP_AS_EXPIRED_PARAMETER = "asExpired";
 }
