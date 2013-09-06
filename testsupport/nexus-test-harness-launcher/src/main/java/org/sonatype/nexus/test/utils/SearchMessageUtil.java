@@ -373,7 +373,7 @@ public class SearchMessageUtil
     String entityText;
     try {
       response =
-          RequestFacade.sendMessage("content/repositories/" + repositoryId + "/" + itemPath + "?describe=info",
+          RequestFacade.sendMessage("service/local/repositories/" + repositoryId + "/content/" + itemPath + "?describe=info",
               Method.GET, new XStreamRepresentation(xstream, "", MediaType.APPLICATION_XML));
       entityText = response.getEntity().getText(); // to make Restlet response buffer it
       if (response.getStatus().getCode() == Status.REDIRECTION_FOUND.getCode()) {
