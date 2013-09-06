@@ -35,4 +35,8 @@ public interface Renderer
 
   void renderErrorPage(final HttpServletRequest request, final HttpServletResponse response,
       final ResourceStoreRequest resourceStoreRequest, final Exception exception) throws IOException;
+
+  void renderRequestDescription(final HttpServletRequest request, final HttpServletResponse response,
+      final ResourceStoreRequest resourceStoreRequest, final StorageItem item, final Exception exception)
+      throws IOException;
 }

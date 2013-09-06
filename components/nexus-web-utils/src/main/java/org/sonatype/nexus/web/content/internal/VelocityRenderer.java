@@ -11,7 +11,7 @@
  * Eclipse Foundation. All other trademarks are the property of their respective owners.
  */
 
-package org.sonatype.nexus.web.content;
+package org.sonatype.nexus.web.content.internal;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -39,10 +39,10 @@ import org.sonatype.nexus.proxy.item.StorageCollectionItem;
 import org.sonatype.nexus.proxy.item.StorageFileItem;
 import org.sonatype.nexus.proxy.item.StorageItem;
 import org.sonatype.nexus.proxy.item.uid.IsHiddenAttribute;
+import org.sonatype.nexus.web.content.Renderer;
 import org.sonatype.sisu.velocity.Velocity;
 
 import com.google.common.base.Strings;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -51,6 +51,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.context.Context;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -96,13 +97,7 @@ public class VelocityRenderer
 
     Collections.sort(entries, new CollectionEntryComparator());
 
-    final Map<String, Object> dataModel = Maps.newHashMap();
-    String nexusRoot = coll.getResourceStoreRequest().getRequestAppRootUrl();
-    if (nexusRoot.endsWith("/")) {
-      nexusRoot = nexusRoot.substring(0, nexusRoot.length() - 1);
-    }
-    dataModel.put("nexusRoot", nexusRoot);
-    dataModel.put("nexusVersion", applicationVersion);
+    final Map<String, Object> dataModel = createBaseModel(coll.getResourceStoreRequest());
     dataModel.put("requestPath", coll.getPath());
     dataModel.put("listItems", entries);
     render(getTemplate("repositoryContentHtml.vm"), dataModel, response.getOutputStream());
@@ -112,14 +107,7 @@ public class VelocityRenderer
   public void renderErrorPage(final HttpServletRequest request, final HttpServletResponse response,
       final ResourceStoreRequest rsr, final Exception exception) throws IOException
   {
-    final Map<String, Object> dataModel = Maps.newHashMap();
-    // getContentRoot(req) always returns Reference with "/" as last character
-    String nexusRoot = rsr.getRequestAppRootUrl();
-    if (nexusRoot.endsWith("/")) {
-      nexusRoot = nexusRoot.substring(0, nexusRoot.length() - 1);
-    }
-    dataModel.put("nexusRoot", nexusRoot);
-    dataModel.put("nexusVersion", applicationVersion);
+    final Map<String, Object> dataModel = createBaseModel(rsr);
     dataModel.put("statusCode", response.getStatus());
     dataModel.put("statusName", exception.getClass().getSimpleName());
     dataModel.put("errorDescription", StringEscapeUtils.escapeHtml(Strings.nullToEmpty(exception.getMessage())));
@@ -129,7 +117,30 @@ public class VelocityRenderer
     render(getTemplate("errorPageContentHtml.vm"), dataModel, response.getOutputStream());
   }
 
+  @Override
+  public void renderRequestDescription(final HttpServletRequest request, final HttpServletResponse response,
+      final ResourceStoreRequest resourceStoreRequest, final StorageItem item, final Exception exception)
+      throws IOException
+  {
+    final Map<String, Object> dataModel = createBaseModel(resourceStoreRequest);
+    dataModel.put("req", resourceStoreRequest);
+    dataModel.put("item", item);
+    dataModel.put("exception", exception);
+    render(getTemplate("requestDescriptionHtml.vm"), dataModel, response.getOutputStream());
+  }
+
   // ==
+
+  protected Map<String, Object> createBaseModel(final ResourceStoreRequest resourceStoreRequest) {
+    final Map<String, Object> dataModel = Maps.newHashMap();
+    String nexusRoot = resourceStoreRequest.getRequestAppRootUrl();
+    if (nexusRoot.endsWith("/")) {
+      nexusRoot = nexusRoot.substring(0, nexusRoot.length() - 1);
+    }
+    dataModel.put("nexusRoot", nexusRoot);
+    dataModel.put("nexusVersion", applicationVersion);
+    return dataModel;
+  }
 
   protected void render(final Template template, final Map<String, Object> dataModel, final OutputStream outputStream)
       throws IOException

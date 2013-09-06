@@ -55,9 +55,8 @@ import org.sonatype.nexus.proxy.storage.UnsupportedStorageOperationException;
 import org.sonatype.nexus.util.SystemPropertiesHelper;
 import org.sonatype.nexus.web.Constants;
 import org.sonatype.nexus.web.RemoteIPFinder;
-import org.sonatype.nexus.web.content.view.RequestDescribeView;
-import org.sonatype.nexus.web.content.view.View;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -67,6 +66,7 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -97,25 +97,28 @@ public class NexusContentServlet
   private static final boolean DEREFERENCE_LINKS = SystemPropertiesHelper.getBoolean(
       NexusContentServlet.class.getName() + ".DEREFERENCE_LINKS", true);
 
+  /**
+   * Stopwatch that is started when {@link ResourceStoreRequest} is created and stopped when request processing returns
+   * from {@link RepositoryRouter}.
+   */
+  private static final String STOPWATCH_KEY = NexusContentServlet.class.getName() + ".stopwatch";
+
   private final Logger logger = LoggerFactory.getLogger(NexusContentServlet.class);
 
   private final RepositoryRouter repositoryRouter;
   private final Renderer renderer;
   private final GlobalRestApiSettings globalRestApiSettings;
   private final String serverString;
-  private final Map<String, View> views;
 
   @Inject
   public NexusContentServlet(final RepositoryRouter repositoryRouter, final Renderer renderer,
-      final GlobalRestApiSettings globalRestApiSettings, final ApplicationStatusSource applicationStatusSource,
-      final Map<String, View> views)
+      final GlobalRestApiSettings globalRestApiSettings, final ApplicationStatusSource applicationStatusSource)
   {
     this.repositoryRouter = checkNotNull(repositoryRouter);
     this.renderer = checkNotNull(renderer);
     this.globalRestApiSettings = checkNotNull(globalRestApiSettings);
     this.serverString = "Nexus/" + checkNotNull(applicationStatusSource).getSystemStatus().getVersion();
-    this.views = checkNotNull(views);
-    logger.debug("bufferSize={}, dereferenceLinks={}, views={}", BUFFER_SIZE, DEREFERENCE_LINKS, views.keySet());
+    logger.debug("bufferSize={}, dereferenceLinks={}", BUFFER_SIZE, DEREFERENCE_LINKS);
   }
 
   /**
@@ -127,6 +130,7 @@ public class NexusContentServlet
       resourceStorePath = "/";
     }
     final ResourceStoreRequest result = new ResourceStoreRequest(resourceStorePath);
+    result.getRequestContext().put(STOPWATCH_KEY, new Stopwatch().start());
 
     // honor the local only and remote only
     final Map<String, String[]> parameterMap = request.getParameterMap();
@@ -322,6 +326,7 @@ public class NexusContentServlet
             return;
           }
         }
+        ((Stopwatch) rsr.getRequestContext().get(STOPWATCH_KEY)).stop();
         if (isDescribeRequest(request)) {
           doGetDescribe(request, response, rsr, item, null);
         }
@@ -337,6 +342,7 @@ public class NexusContentServlet
         }
       }
       catch (ItemNotFoundException e) {
+        ((Stopwatch) rsr.getRequestContext().get(STOPWATCH_KEY)).stop();
         if (isDescribeRequest(request)) {
           doGetDescribe(request, response, rsr, null, e);
         }
@@ -512,26 +518,9 @@ public class NexusContentServlet
   protected void doGetDescribe(final HttpServletRequest request, final HttpServletResponse response,
       final ResourceStoreRequest rsr, final StorageItem item, final Exception e) throws IOException
   {
-    String requestedView = request.getParameter(Constants.REQ_QP_IS_DESCRIBE_PARAMETER);
-    if (Strings.isNullOrEmpty(requestedView)) {
-      // default is request describe
-      requestedView = RequestDescribeView.ID;
-    }
-    final View view = views.get(requestedView);
-    if (view == null) {
-      response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-      renderer
-          .renderErrorPage(
-              request,
-              response,
-              rsr,
-              new ItemNotFoundException(ItemNotFoundException.reasonFor(rsr, "Requested view %s not found",
-                  requestedView)));
-      return;
-    }
     // send no cache headers, as any of these responses should not be cached, ever
     addNoCacheResponseHeaders(response);
-    view.renderView(request, response, rsr, item, e);
+    renderer.renderRequestDescription(request, response, rsr, item, e);
   }
 
   // PUT
@@ -544,9 +533,11 @@ public class NexusContentServlet
     try {
       final Map<String, String> userAttributes = getUserAttributesFromRequest(request);
       repositoryRouter.storeItem(rsr, request.getInputStream(), userAttributes);
+      ((Stopwatch) rsr.getRequestContext().get(STOPWATCH_KEY)).stop();
       response.setStatus(HttpServletResponse.SC_CREATED);
     }
     catch (Exception e) {
+      ((Stopwatch) rsr.getRequestContext().get(STOPWATCH_KEY)).stop();
       handleException(request, response, rsr, e);
     }
   }
@@ -571,8 +562,10 @@ public class NexusContentServlet
     try {
       repositoryRouter.deleteItem(rsr);
       response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+      ((Stopwatch) rsr.getRequestContext().get(STOPWATCH_KEY)).stop();
     }
     catch (Exception e) {
+      ((Stopwatch) rsr.getRequestContext().get(STOPWATCH_KEY)).stop();
       handleException(request, response, rsr, e);
     }
   }
