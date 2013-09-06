@@ -467,6 +467,7 @@ public class NexusContentServlet
         final Range<Long> range = ranges.get(0);
         if (!isRequestedRangeSatisfiable(file, range)) {
           response.setStatus(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
+          response.setHeader("Content-Length", "0");
           response.setHeader("Content-Range", "bytes */" + file.getLength());
           return;
         }
