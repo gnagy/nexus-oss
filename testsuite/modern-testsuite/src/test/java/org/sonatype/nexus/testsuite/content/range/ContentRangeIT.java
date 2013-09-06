@@ -18,7 +18,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
-import org.sonatype.nexus.client.core.exception.NexusClientException;
 import org.sonatype.nexus.client.core.exception.NexusClientResponseException;
 import org.sonatype.nexus.client.core.subsystem.content.Location;
 import org.sonatype.nexus.testsuite.content.ContentITSupport;
@@ -28,6 +27,7 @@ import com.google.common.collect.Range;
 import com.google.common.io.Files;
 import org.junit.Before;
 import org.junit.Test;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
