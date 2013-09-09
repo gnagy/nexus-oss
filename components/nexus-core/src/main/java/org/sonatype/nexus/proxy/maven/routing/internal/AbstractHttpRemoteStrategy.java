@@ -40,7 +40,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Abstract class for {@link RemoteStrategy} implementations that is using HC4, see {@link Hc4Provider}.
  * 
  * @author cstamas
- * @since 2.7.0
+ * @since 2.6.3
  */
 public abstract class AbstractHttpRemoteStrategy
     extends AbstractRemoteStrategy

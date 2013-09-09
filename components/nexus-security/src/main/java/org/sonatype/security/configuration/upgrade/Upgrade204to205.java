@@ -33,7 +33,7 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 /**
  * {@link SecurityConfigurationVersionUpgrader} step for security configuration version 2.0.4 > 2.0.5 upgrade.
  * 
- * @since 2.7.0
+ * @since 2.6.3
  */
 @Singleton
 @Typed(SecurityConfigurationVersionUpgrader.class)
