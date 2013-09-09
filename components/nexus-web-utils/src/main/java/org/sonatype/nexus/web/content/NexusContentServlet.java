@@ -84,7 +84,7 @@ public class NexusContentServlet
    * 16KB.
    */
   private static final int BUFFER_SIZE = SystemPropertiesHelper.getInteger(NexusContentServlet.class.getName()
-      + ".BUFFER_SIZE", 16 * 1024);
+      + ".BUFFER_SIZE", -1);
 
   /**
    * A flag setting what should be done if request path retrieval gets a {@link StorageLinkItem} here. If {@code true},
@@ -454,7 +454,7 @@ public class NexusContentServlet
       if (ranges.isEmpty()) {
         if (contentNeeded) {
           try (final InputStream in = file.getInputStream()) {
-            copy(in, response.getOutputStream());
+            sendContent(in, response);
           }
         }
       }
@@ -479,11 +479,10 @@ public class NexusContentServlet
         if (contentNeeded) {
           try (final InputStream in = file.getInputStream()) {
             in.skip(range.lowerEndpoint());
-            copy(ByteStreams.limit(in, bodySize), response.getOutputStream());
+            sendContent(ByteStreams.limit(in, bodySize), response);
           }
         }
       }
-      response.flushBuffer();
     }
   }
 
@@ -630,25 +629,36 @@ public class NexusContentServlet
   }
 
   /**
-   * Copies all bytes from the input stream to the output stream.
-   * Does not close or flush either stream.
+   * Sends content by copying all bytes from the input stream to the output stream while setting the preferred buffer
+   * size. At the end, it flushes response buffer.
    * <p>
-   * Copied from {@link ByteStreams#copy(InputStream, OutputStream)} (version 14.0.1) to expose configurable buffer
-   * sizes. Modified for return value (void instead of counting).
-   * 
-   * @param from the input stream to read from
-   * @param to the output stream to write to
-   * @return the number of bytes copied
-   * @throws IOException if an I/O error occurs
+   * Inspired from {@link ByteStreams#copy(InputStream, OutputStream)} (version 14.0.1) to expose configurable buffer
+   * sizes and adapted for current use case.
    */
-  private static void copy(final InputStream from, final OutputStream to) throws IOException {
-    final byte[] buf = new byte[BUFFER_SIZE];
-    while (true) {
-      int r = from.read(buf);
-      if (r == -1) {
-        break;
+  private void sendContent(final InputStream from, final HttpServletResponse response) throws IOException {
+    int bufferSize = BUFFER_SIZE;
+    if (bufferSize < 1) {
+      // if no user override, ask container for bufferSize
+      bufferSize = response.getBufferSize();
+      if (bufferSize < 1) {
+        bufferSize = 8192;
+        response.setBufferSize(bufferSize);
       }
-      to.write(buf, 0, r);
     }
+    else {
+      // user override present, tell container what buffer size we'd like
+      response.setBufferSize(bufferSize);
+    }
+    final byte[] buf = new byte[bufferSize];
+    try (final OutputStream to = response.getOutputStream()) {
+      while (true) {
+        int r = from.read(buf);
+        if (r == -1) {
+          break;
+        }
+        to.write(buf, 0, r);
+      }
+    }
+    response.flushBuffer();
   }
 }
